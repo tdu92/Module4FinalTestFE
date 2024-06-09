@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Module4FinalTest</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.2/axios.min.js" integrity="sha512-JSCFHhKDilTRRXe9ak/FJ28dcpOJxzQaCd3Xg8MyF6XFjODhy/YMCM8HW0TFDckNHWUewW+kfvhin43hKtJxAw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+    <button onclick="showHome()">Home</button> | <button onclick="showFormAdd()">Add</button>
+
+    <div id="root">
+    </div>
+
+    <script>
+        function showHome(){
+            axios.get("http://localhost:8080/cities").then((response)=>{
+                let lit = response.data;
+                let html =`
+                <table border="1">
+                <tr><td>Id</td><td>CityName</td><td>Area</td><td>Population</td><td>GDP</td><td>Description</td><td>Country</td><td colspan="2">Action</td></tr>
+                `;
+                for(let i=0; i<lit.length; i++){
+                    html += `
+                    <tr><td>${lit[i].cityId}</td><td>${lit[i].cityName}</td><td>${lit[i].area}</td><td>${lit[i].population}</td><td>${lit[i].gdp}</td><td>${lit[i].description}</td><td>${lit[i].country.countryName}</td>
+                    <td><button onclick="showFormEdit(${lit[i].cityId})">Edit</button></td>
+                    <td><button onclick="remove(${lit[i].cityId})">Delete</button></td></tr>
+                `;
+                }
+                html += `</table>`;
+                document.getElementById("root").innerHTML = html;
+            })
+        }
+        function showFormEdit(id){
+            alert("Edit " + id);
+            axios.get(`http://localhost:8080/cities/${id}`).then((response)=>{
+                let cityToEdit = response.data;
+                let html = `<table border="1">
+                <tr><td>Id</td><td>CityName</td><td>Area</td><td>Population</td><td>GDP</td><td>Description</td><td>Country</td></tr>
+                `;
+                    html += `
+                    <tr><td>${cityToEdit.cityId}</td><td>${cityToEdit.cityName}</td><td>${cityToEdit.area}</td><td>${cityToEdit.population}</td><td>${cityToEdit.gdp}</td><td>${cityToEdit.description}</td><td>${cityToEdit.country.countryName}</td>
+                `;
+                html += `</table>`;
+                document.getElementById("root").innerHTML = html;
+            axios.get("http://localhost:8080/countries").then((response)=> {
+                let country = response.data;
+
+                let htmlCountry = `<select id="country">`;
+                for (let i = 0; i < country.length; i++) {
+                    htmlCountry += `<option value="${country[i].countryId}">${country[i].countryName}</option>`;
+                }
+                htmlCountry += `</select>`
+
+                document.getElementById("root").innerHTML = html +`
+            <input type="text" id="name" placeholder="CityName" >
+            <input type="number" id="area" placeholder="Area" >
+            <input type="number" id="population" placeholder="Population" >
+            <input type="number" id="gdp" placeholder="GDP" >
+            <input type="text" id="description" placeholder="Description">
+            ${htmlCountry}
+            <button onclick="edit(${cityToEdit.cityId})">Update</button>
+            `
+            })})
+        }
+        function edit(id){
+            let name = document.getElementById("name").value;
+            let area = document.getElementById("area").value;
+            let population = document.getElementById("population").value;
+            let gdp = document.getElementById("gdp").value;
+            let description = document.getElementById("description").value;
+            let country = document.getElementById("country").value;
+
+            let updateCity={
+                cityName: name,
+                area: area,
+                population: population,
+                gdp: gdp,
+                description: description,
+                country: {
+                    countryId: country
+                }
+            }
+            axios.put(`http://localhost:8080/cities/${id}`,updateCity).then(()=>{showHome()});
+
+        }
+        function remove(id){
+            let isConfirm = confirm("Sure??");
+            if(isConfirm){
+                axios.delete(`http://localhost:8080/cities/${id}`).then(()=>{
+                    showHome();
+                })
+            }
+        }
+        function showFormAdd(){
+            axios.get("http://localhost:8080/countries").then((response)=> {
+                let country = response.data;
+                let html = `<select id="country">`;
+                for (let i = 0; i < country.length; i++) {
+                    html += `<option value="${country[i].countryId}">${country[i].countryName}</option>`;
+                }
+                html += `</select>`
+            document.getElementById("root").innerHTML = `
+            <input type="text" id="name" placeholder="Name" >
+            <input type="number" id="area" placeholder="Area" >
+            <input type="number" id="population" placeholder="Population" >
+            <input type="number" id="gdp" placeholder="GDP" >
+            <input type="text" id="description" placeholder="Description">
+            ${html}
+            <button onclick="add()">Submit</button>
+            `
+            })
+        }
+        function add(){
+            let name = document.getElementById("name").value;
+            let area = document.getElementById("area").value;
+            let population = document.getElementById("population").value;
+            let gdp = document.getElementById("gdp").value;
+            let description = document.getElementById("description").value;
+            let country = document.getElementById("country").value;
+
+            let newCity={
+                cityName: name,
+                area: area,
+                population: population,
+                gdp: gdp,
+                description: description,
+                country: {
+                    countryId: country
+                }
+            }
+            axios.post("http://localhost:8080/cities",newCity).then(()=>{showHome()});
+        }
+    </script>
+</body>
+</html>
